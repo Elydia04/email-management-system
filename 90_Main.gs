@@ -193,7 +193,7 @@ function commitRecord_(recObj, keys, seen, stats) {
   if (recObj.Status !== STATUS.OK) stats.review++;
 }
 
-function makeRecord_(source, routed, attName, f, status, detail, notes) {
+function makeRecord_(source, routed, attName, f, status, detail, notes, sourceKind) {
   return {
     Timestamp: isoNow_(),
     MessageId: source.messageId,
@@ -208,7 +208,7 @@ function makeRecord_(source, routed, attName, f, status, detail, notes) {
     Tax: (f.tax === null || f.tax === undefined) ? '' : f.tax,
     Status: status,
     Confidence: (f.confidence === undefined) ? '' : f.confidence,
-    Source: detail ? (detail.indexOf('src=ocr') !== -1 ? 'ocr' : '') : '',
+    Source: sourceKind || '',
     SourceDetail: detail || '',
     Notes: notes || '',
     From: source.from,
@@ -240,7 +240,7 @@ function handleRecord_(source, routed, att, seen, stats) {
     encError = at.error || '';
     if (at.encrypted) {
       const status = STATUS.ENCRYPTED;
-      commitRecord_(makeRecord_(source, routed, attName, emptyFields_(), status, 'src=ocr enc=password', encError), [], seen, stats);
+      commitRecord_(makeRecord_(source, routed, attName, emptyFields_(), status, 'src=ocr enc=password', encError, 'ocr'), [], seen, stats);
       return { handled: true };
     }
   } else {
@@ -273,7 +273,7 @@ function handleRecord_(source, routed, att, seen, stats) {
   if (encError) notes.push(encError);
   if (f.confidence < 0.85 && status !== STATUS.OK) notes.push('low confidence');
 
-  commitRecord_(makeRecord_(source, routed, attName, f, status, detail, notes.join('; ')), keys, seen, stats);
+  commitRecord_(makeRecord_(source, routed, attName, f, status, detail, notes.join('; '), sourceKind), keys, seen, stats);
   return { handled: true };
 }
 

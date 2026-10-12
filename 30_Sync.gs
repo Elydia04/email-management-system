@@ -109,13 +109,14 @@ function pollHistory_(clock) {
     pages++;
     let res;
     try {
-      res = Gmail.Users.History.list('me', {
+      const req = {
         startHistoryId: cursor,
         labelId: cfg_(PROP.INVOICE_LABEL_ID, ''),
         historyTypes: ['labelAdded'],
-        maxResults: 500,
-        pageToken: pageToken
-      });
+        maxResults: 500
+      };
+      if (pageToken) req.pageToken = pageToken;
+      res = Gmail.Users.History.list('me', req);
     } catch (e) {
       if (isNotFound_(e)) { recoverHistoryGap_(); return; }
       throw e;
