@@ -16,7 +16,8 @@ const PLATFORM_DOMAINS = {
   'stripe.com': 1, 'paypal.com': 1, 'paddle.com': 1, 'paddle.net': 1,
   'shopify.com': 1, 'intuit.com': 1, 'quickbooks.com': 1, 'bill.com': 1,
   'squareup.com': 1, 'braintreepayments.com': 1, 'chargebee.com': 1,
-  'revolut.com': 1, 'wise.com': 1, 'xero.com': 1
+  'revolut.com': 1, 'wise.com': 1, 'xero.com': 1,
+  'google.com': 1
 };
 
 const GENERIC_TEMPLATE = { name: 'generic', vendor: '', domains: [], anchors: null };
@@ -48,7 +49,8 @@ const VENDOR_TEMPLATES = {
 
 /** Merchant hints for platform escalation. Extend once samples identify merchants. */
 const MERCHANT_HINTS = [
-  { vendor: 'Acme Corp', hints: ['acme'] }
+  { vendor: 'Acme Corp', hints: ['acme'] },
+  { vendor: 'Google Play', hints: ['capcut', 'google play', 'play.google'] }
 ];
 
 // ---- sender parsing ---------------------------------------------------------
@@ -78,7 +80,7 @@ function route_(fromEmail, bodyText) {
   const platform = !!PLATFORM_DOMAINS[domain];
   let tpl = VENDOR_TEMPLATES[domain] || null;
 
-  // Platform senders don't identify the merchant — escalate to a body match.
+  // Allow merchant hints to also set a friendlier vendor and doc type where obvious.
   if (!tpl && platform) {
     const m = matchMerchantHint_(bodyText);
     if (m) {

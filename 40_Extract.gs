@@ -242,6 +242,10 @@ function parseAmount_(raw) {
       if (s.indexOf(keys[i]) !== -1) { currency = CURRENCY_SYMBOLS[keys[i]]; break; }
     }
   }
+  if (!currency) {
+    const t2 = String(raw || '').toUpperCase();
+    if (t2.indexOf('PHP') !== -1 || t2.indexOf('PESO') !== -1) currency = 'PHP';
+  }
 
   const nm = s.match(/\d[\d.,\u00a0 '\u2019]*\d|\d/);
   if (!nm) return null;
