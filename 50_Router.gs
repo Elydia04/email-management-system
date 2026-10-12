@@ -123,6 +123,12 @@ function extractRecord_(input) {
   const tpl = input.template || GENERIC_TEMPLATE;
   const f = runTemplate_(tpl, input.text || '', input.sourceKind || 'body');
 
+  // The subject is a strong, cheap signal for the document type; fold it in.
+  if (input.subject) {
+    const s = String(input.subject).trim();
+    if (s) f.docType = detectDocType_(s + '\n' + (input.text || ''));
+  }
+
   const j = input.jsonLd;
   if (j) {
     if (j.invoiceNo && !f.invoiceNo) f.invoiceNo = String(j.invoiceNo);

@@ -100,13 +100,21 @@ function runTests() {
   ok('bracketed clause not negative', parseAmount_('(Includes VAT of 5.25)').value === 5.25,
     parseAmount_('(Includes VAT of 5.25)').value);
 
+  // doc type: a bare "credit" (e.g. credit card) must not mean credit note
+  ok('credit card is not a credit note', detectDocType_('Paid with credit card') === 'receipt',
+    detectDocType_('Paid with credit card'));
+  ok('credit note still detected', detectDocType_('CREDIT NOTE') === 'credit_note', detectDocType_('CREDIT NOTE'));
+  ok('cleanValue strips leading star', cleanValue_('* GPA.1') === 'GPA.1', cleanValue_('* GPA.1'));
+
   // real-sample regression: Google Play (CapCut) receipt, non-USD
   const gp = fixtures_().filter(function (f) { return f.name === 'google-play-receipt'; })[0];
   const gpRouted = route_(gp.from, gp.text);
   const gpRec = extractRecord_({
     text: gp.text, sourceKind: 'body', vendor: gpRouted.vendor,
+    subject: gp.subject,
     template: gpRouted.template, jsonLd: null, multiColumnRisk: false
   });
+  ok('GP receipt docType', gpRec.docType === 'receipt', gpRec.docType);
   ok('GP receipt amount 49', gpRec.amount === 49, gpRec.amount);
   ok('GP receipt currency PHP', gpRec.currency === 'PHP', gpRec.currency);
   ok('GP receipt order no', /GPA\./.test(gpRec.invoiceNo), gpRec.invoiceNo);

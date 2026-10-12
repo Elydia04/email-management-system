@@ -19,6 +19,7 @@ function reportExtraction_(name, source, multiColumnRisk) {
     text: source.bodyText || '',
     sourceKind: kind,
     vendor: routed.vendor,
+    subject: source.subject,
     template: routed.template,
     jsonLd: source.jsonLd || null,
     multiColumnRisk: !!multiColumnRisk

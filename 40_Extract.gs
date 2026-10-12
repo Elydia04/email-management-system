@@ -141,7 +141,7 @@ function cleanValue_(v) {
   // Strip leading separators. Note: '-' is NOT in this class, so a sign that is
   // attached to an amount ("-$50.00") survives. A dash used as a separator
   // ("Invoice No - 123") is handled by the next line instead.
-  s = s.replace(/^[\s:.\u2013\u2014#]+/, '');
+  s = s.replace(/^[\s:.\u2013\u2014#*]+/, '');
   s = s.replace(/^-\s+/, '');
   s = s.replace(/^[A-Za-z]{0,12}\s*[:#]\s*/, '');
   s = s.replace(/[\s:.\u2013\u2014]+$/, '');
@@ -333,8 +333,15 @@ function normYear_(y) { return y < 100 ? 2000 + y : y; }
 
 function detectDocType_(text) {
   const t = String(text || '').toLowerCase();
-  if (/\bcredit note\b|\bcredit memo\b|\brefund\b|\breversal\b|\bcredit\b/.test(t)) return 'credit_note';
-  if (/\breceipt\b|\bpaid\b|\bpayment received\b/.test(t)) return 'receipt';
+  // Require an explicit credit-note phrase. A bare "credit" (e.g. "credit
+  // card", or a forwarded footer) must NOT trigger this — that mistake once
+  // mistyped every Google Play receipt as a credit note.
+  if (/credit\s+(note|memo|invoice)|\brefund\b|\breversal\b|\bamount credited\b|\bcredit issued\b/.test(t)) {
+    return 'credit_note';
+  }
+  if (/\breceipt\b|\border confirmation\b|\bpayment received\b|\bthank you for your (purchase|order)\b|\bpaid\b/.test(t)) {
+    return 'receipt';
+  }
   return 'invoice';
 }
 

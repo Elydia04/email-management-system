@@ -269,6 +269,7 @@ function handleRecord_(source, routed, att, seen, stats) {
   // 3. extract
   const f = extractRecord_({
     text: text, sourceKind: sourceKind, vendor: routed.vendor,
+    subject: source.subject,
     template: routed.template, jsonLd: source.jsonLd, multiColumnRisk: multiColumnRisk
   });
 
