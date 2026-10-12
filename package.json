@@ -1,0 +1,21 @@
+{
+  "name": "invoice-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Gmail -> Google Sheets invoice tracker (Google Apps Script)",
+  "scripts": {
+    "test": "node tools/local-tests.js",
+    "extract": "node tools/extract.js",
+    "login": "clasp login",
+    "create": "clasp create --type standalone --title \"Invoice Tracker\" --rootDir .",
+    "push": "clasp push --force",
+    "pull": "clasp pull",
+    "open": "clasp open-container",
+    "run:setup": "clasp run setup",
+    "run:probe": "clasp run probeFixtures",
+    "run:dry": "clasp run run"
+  },
+  "devDependencies": {
+    "@google/clasp": "^3.4.1"
+  }
+}

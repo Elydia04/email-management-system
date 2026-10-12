@@ -61,16 +61,33 @@ Script project.
 ## Setup
 
 1. **Create the Apps Script project**
-   - Go to <https://script.google.com> → *New project*.
-   - Replace the default files with the `.gs` files here (or use `clasp`).
-   - Set the manifest: *Project Settings → Show "appsscript.json"*, then paste
-     `appsscript.json`.
-   - **`timeZone` is set to `America/Chicago`** (Dallas / US Central, DST-aware).
-     Change it only if you relocate.
+
+   *Option A — with `clasp` (recommended, one command):*
+   ```bash
+   bash tools/clasp-setup.sh
+   ```
+   This installs `clasp`, logs you in, creates a standalone project, and pushes
+   every file. Prerequisite (one time): enable the Apps Script API at
+   <https://script.google.com/home/usersettings>.
+
+   *Option B — by hand:* go to <https://script.google.com> → *New project*, then
+   either paste the files, or create `.clasp.json` from `.clasp.json.example`
+   (paste the project's Script ID) and run `npm install && npm run push`.
+
+   Either way, the manifest sets **`timeZone` to `America/Chicago`**
+   (Dallas / US Central, DST-aware). Change it only if you relocate.
+
+   > `clasp` pushes only the root `*.gs` files and `appsscript.json`;
+   > `.claspignore` keeps `tools/`, docs and Node files local.
 
 2. **Enable advanced services**
-   - *Editor → Services → +* → add **Gmail API** (v1) and **Drive API** (v2).
+   - The manifest already declares Gmail v1 + Drive v2
+     (`dependencies.enabledAdvancedServices`), so a `clasp` push usually
+     enables them. If the editor shows them missing, add them manually:
+     *Editor → Services → +* → **Gmail API (v1)** and **Drive API (v2)**.
    - Drive v2 is used because it exposes `ocr: true` on insert.
+   - If calls fail with "API not enabled", enable Gmail API and Drive API for
+     the script's GCP project: run `clasp open-credentials-setup`.
 
 3. **Script Properties** (*Project Settings → Script Properties*), all optional:
    - `INVOICE_LABEL` — label name (default `InvoiceTracker`).
@@ -83,14 +100,30 @@ Script project.
      senders, or `has:attachment filename:pdf`). Keep it deliberately broad —
      a missed label is an invisible gap.
 
-5. **Run `setup()`** from the editor.
+5. **Run `setup()`** from the editor (or `npm run run:setup`).
    - Creates the spreadsheet + tabs, resolves/creates the label, prints the
      spreadsheet ID.
 
-6. **Dry run**: leave `DRY_RUN=true`, run `run()`, and check execution logs.
+6. **Dry run**: leave `DRY_RUN=true`, run `run()` (`npm run run:dry`), and check
+   execution logs.
 
 7. **Go live**: set `DRY_RUN=false`, then run `installTrigger()` once to add an
    hourly trigger.
+
+### clasp cheat-sheet
+
+| Task | Command |
+| --- | --- |
+| Install clasp | `npm install` |
+| Log in | `npm run login` |
+| Create project (first time) | `npm run create` |
+| Push local → Apps Script | `npm run push` |
+| Pull remote → local | `npm run pull` |
+| Open the editor | `npm run open` |
+| Run a function remotely | `npm run run:probe` (etc.) |
+
+`clasp run <fn>` (aka `npm run run:*`) is optional and may require deploying the
+script as an *API executable* first; the editor **Run** button always works.
 
 ---
 
