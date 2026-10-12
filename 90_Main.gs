@@ -194,17 +194,8 @@ function buildDetail_(f, routed, sourceKind) {
  * and update the in-memory seen set.
  */
 function commitRecord_(recObj, keys, seen, stats) {
-  const primary = findKey_(keys, 'ATT') || findKey_(keys, 'MSG');
-  recObj.DedupeKey = primary ? primary.key : '';
   if (!isDryRun_()) {
     appendRows_('Ledger', [ledgerRow_(recObj)]);
-    const rowNum = sheet_('Ledger').getLastRow();
-    appendKeyIndex_(keyIndexEntries_(keys, {
-      messageId: recObj.MessageId,
-      attachmentName: recObj.AttachmentName,
-      vendor: recObj.Vendor,
-      invoiceNo: recObj.InvoiceNo
-    }, rowNum));
   }
   keys.forEach(function (k) { seen[k.key] = true; });
   stats.records++;
@@ -212,25 +203,34 @@ function commitRecord_(recObj, keys, seen, stats) {
 }
 
 function makeRecord_(source, routed, attName, f, status, detail, notes, sourceKind) {
+  var amt = (f.amount === null || f.amount === undefined) ? '' : f.amount;
+  var totalPaid = '';
+  var outstanding = amt;
+  var payDate = '';
+  if (f.docType === 'receipt') {
+    totalPaid = amt;
+    outstanding = 0;
+    payDate = f.invoiceDate || isoNow_().substring(0,10);
+  } else if (status === 'ok') {
+    totalPaid = '';
+    outstanding = amt;
+    payDate = '';
+  } else {
+    totalPaid = '';
+    outstanding = amt;
+    payDate = '';
+  }
   return {
-    Timestamp: isoNow_(),
-    MessageId: source.messageId,
-    AttachmentName: attName,
-    Vendor: routed.vendor,
-    DocType: f.docType || 'invoice',
-    InvoiceNo: f.invoiceNo || '',
-    InvoiceDate: f.invoiceDate || '',
-    DueDate: f.dueDate || '',
-    Amount: (f.amount === null || f.amount === undefined) ? '' : f.amount,
-    Currency: f.currency || '',
-    Tax: (f.tax === null || f.tax === undefined) ? '' : f.tax,
-    Status: status,
-    Confidence: (f.confidence === undefined) ? '' : f.confidence,
-    Source: sourceKind || '',
-    SourceDetail: detail || '',
-    Notes: notes || '',
-    From: source.from,
-    Subject: source.subject
+    'Invoice #': f.invoiceNo || '',
+    'Date': f.invoiceDate || '',
+    'Payment due': f.dueDate || '',
+    'Brand name': routed.vendor || '',
+    'Amount': amt,
+    'Total paid': totalPaid,
+    'Outstanding': outstanding,
+    'Status': (f.docType === 'receipt') ? 'Paid' : status,
+    'Payment Date': payDate,
+    'Notes': notes || ''
   };
 }
 

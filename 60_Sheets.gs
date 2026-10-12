@@ -89,7 +89,7 @@ function ledgerRow_(rec) {
 }
 
 function loadLedgerDedupeKeys_() {
-  return readColumn_('Ledger', 'DedupeKey');
+  return [];
 }
 
 // ---- key index --------------------------------------------------------------

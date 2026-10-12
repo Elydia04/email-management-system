@@ -43,10 +43,7 @@ const STATUS = {
 // ---- Ledger schema (single source of truth for column order) ----------------
 
 const LEDGER_HEADERS = [
-  'Timestamp', 'MessageId', 'AttachmentName', 'Vendor', 'DocType',
-  'InvoiceNo', 'InvoiceDate', 'DueDate', 'Amount', 'Currency',
-  'Tax', 'Status', 'Confidence', 'Source', 'SourceDetail',
-  'DedupeKey', 'Notes', 'From', 'Subject'
+  'Invoice #', 'Date', 'Payment due', 'Brand name', 'Amount', 'Total paid', 'Outstanding', 'Status', 'Payment Date', 'Notes'
 ];
 
 const KEYINDEX_HEADERS = [
