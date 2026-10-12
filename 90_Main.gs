@@ -195,7 +195,8 @@ function buildDetail_(f, routed, sourceKind) {
  */
 function commitRecord_(recObj, keys, seen, stats) {
   if (!isDryRun_()) {
-    appendRows_('Ledger', [ledgerRow_(recObj)]);
+    var sh = sheetForDate_(recObj['Date']);
+    appendRowsToSheet_(sh, [ledgerRow_(recObj)]);
   }
   keys.forEach(function (k) { seen[k.key] = true; });
   stats.records++;

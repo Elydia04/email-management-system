@@ -28,6 +28,17 @@ function sheet_(name) {
   return sh;
 }
 
+function sheetForDate_(iso) {
+  var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  if (!iso) return sheet_('Ledger');
+  var m = iso.match(/^(\d{4})-(\d{1,2})/);
+  if (!m) return sheet_('Ledger');
+  var y = parseInt(m[1],10);
+  var mo = parseInt(m[2],10)-1;
+  var name = monthNames[mo] + ' ' + y;
+  return sheet_(name);
+}
+
 function ensureSchema_() {
   Object.keys(HEADERS).forEach(function (name) { sheet_(name); });
 }
@@ -45,6 +56,18 @@ function appendRows_(name, rows) {
   const headers = HEADERS[name];
   const width = headers.length;
   const sh = sheet_(name);
+  const normalized = rows.map(function (r) {
+    const row = r.slice(0, width).map(sanitizeCell_);
+    while (row.length < width) row.push('');
+    return row;
+  });
+  const start = sh.getLastRow() + 1;
+  sh.getRange(start, 1, normalized.length, width).setValues(normalized);
+}
+
+function appendRowsToSheet_(sh, rows) {
+  if (!rows || !rows.length) return;
+  const width = LEDGER_HEADERS.length;
   const normalized = rows.map(function (r) {
     const row = r.slice(0, width).map(sanitizeCell_);
     while (row.length < width) row.push('');
