@@ -106,6 +106,23 @@ result: **36/36 passing**.
 Fixtures cover: plain text, EU number formats, OCR-style tables, portal-link
 emails, credit notes, and JSON-LD.
 
+### Offline: extract any invoice text
+`tools/extract.js` runs the engine on arbitrary text — the fastest way to try a
+real sample (or a pasted email body) before deploying:
+```bash
+# inline
+node tools/extract.js --from "billing@acme.com" "Invoice Number: INV-7
+Total: \$250.00"
+
+# from a saved file (email body or OCR text)
+node tools/extract.js --from "billing@acme.com" --file sample.txt
+
+# from stdin
+cat sample.txt | node tools/extract.js --from "billing@acme.com" -
+```
+It prints the same report as the in-editor `probeText()`. Nothing is written.
+(PDF/image OCR isn't available offline — pass the already-extracted text.)
+
 ### In Apps Script (read-only)
 - `runTests()` — same assertions, in-editor.
 - `probeFixtures()` — fixture report.

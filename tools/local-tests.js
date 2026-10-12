@@ -1,60 +1,19 @@
 /**
  * tools/local-tests.js — run the pure extraction logic under Node.
  *
- * Apps Script globals are shimmed with the minimum needed to exercise the
- * testable functions. This is how the engine is verified without deploying.
- *
  *   node tools/local-tests.js
+ *
+ * Runs the unit tests and pushes the synthetic fixtures through the real
+ * engine. No Google services, no deployment.
  */
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
+const engine = require('./load-engine').load();
 
-const root = path.resolve(__dirname, '..');
-const files = fs.readdirSync(root)
-  .filter(function (f) { return /^\d{2}_.*\.gs$/.test(f); })
-  .sort();
-if (fs.existsSync(path.join(root, 'Fixtures.gs'))) files.push('Fixtures.gs');
-
-const shim = [
-  'var __OUT = [];',
-  'var Logger = { log: function (m) { __OUT.push(String(m)); } };',
-  'var Buffer = require("buffer").Buffer;',
-  'var crypto = require("crypto");',
-  'var Utilities = {',
-  '  DigestAlgorithm: { MD5: "MD5" },',
-  '  newBlob: function (a) { return { getBytes: function () { return Array.from(Buffer.from(String(a), "utf8")); } }; },',
-  '  computeDigest: function (alg, bytes) { return Array.from(crypto.createHash("md5").update(Buffer.from(bytes)).digest()); },',
-  '  sleep: function () {},',
-  '  formatDate: function (d, tz, pattern) { return d.toISOString(); }',
-  '};',
-  'var Session = { getScriptTimeZone: function () { return "America/Chicago"; } };'
-].join('\n');
-
-let src = shim + '\n';
-files.forEach(function (f) {
-  src += '\n// ==== ' + f + ' ====\n' + fs.readFileSync(path.join(root, f), 'utf8') + '\n';
+const res = engine.runTests();
+res.results.forEach(function (r) {
+  console.log((r.pass ? 'PASS  ' : 'FAIL  ') + r.name + (r.pass ? '' : '  -> ' + r.detail));
 });
-src += [
-  '',
-  'var __res = runTests();',
-  '__OUT.forEach(function (l) { console.log(l); });',
-  'var __fixtures = probeFixtures();',
-  'module.exports = { res: __res, out: __OUT, fixtures: __fixtures };'
-].join('\n');
+console.log('TESTS: ' + (res.total - res.failed) + '/' + res.total + ' passed');
 
-const tmp = path.join(os.tmpdir(), 'invoice_tracker_combined_' + Date.now() + '.js');
-fs.writeFileSync(tmp, src, 'utf8');
+console.log('\n===== FIXTURE PROBE (read-only) =====\n' + engine.probeFixtures());
 
-try {
-  const mod = require(tmp);
-  console.log('\n===== FIXTURE PROBE (read-only) =====\n' + mod.fixtures);
-  const passed = mod.res.total - mod.res.failed;
-  console.log('\nSUMMARY: ' + passed + '/' + mod.res.total + ' passed');
-  process.exitCode = mod.res.failed ? 1 : 0;
-} catch (e) {
-  console.error('HARNESS ERROR:', e && e.stack ? e.stack : e);
-  process.exitCode = 2;
-} finally {
-  try { fs.unlinkSync(tmp); } catch (e) { /* ignore */ }
-}
+process.exitCode = res.failed ? 1 : 0;
