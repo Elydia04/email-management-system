@@ -87,6 +87,32 @@ function runTests() {
   ok('confidence high for full fields', good >= 0.9, good);
   ok('confidence low for empty fields', bad <= 0.4, bad);
 
+  // config: an unset numeric property must use the fallback, not 0
+  ok('cfgInt_ empty -> fallback', cfgInt_('__MISSING_KEY__', 318000) === 318000,
+    cfgInt_('__MISSING_KEY__', 318000));
+
+  // currency symbols beyond $
+  ok('amount symbol PHP', parseAmount_('\u20b149.00').currency === 'PHP', parseAmount_('\u20b149.00').currency);
+  ok('amount value PHP', parseAmount_('\u20b149.00').value === 49, parseAmount_('\u20b149.00').value);
+
+  // parentheses: a bracketed *amount* is negative, a bracketed *clause* is not
+  ok('bracketed amount negative', parseAmount_('(50.00)').value === -50, parseAmount_('(50.00)').value);
+  ok('bracketed clause not negative', parseAmount_('(Includes VAT of 5.25)').value === 5.25,
+    parseAmount_('(Includes VAT of 5.25)').value);
+
+  // real-sample regression: Google Play (CapCut) receipt, non-USD
+  const gp = fixtures_().filter(function (f) { return f.name === 'google-play-receipt'; })[0];
+  const gpRouted = route_(gp.from, gp.text);
+  const gpRec = extractRecord_({
+    text: gp.text, sourceKind: 'body', vendor: gpRouted.vendor,
+    template: gpRouted.template, jsonLd: null, multiColumnRisk: false
+  });
+  ok('GP receipt amount 49', gpRec.amount === 49, gpRec.amount);
+  ok('GP receipt currency PHP', gpRec.currency === 'PHP', gpRec.currency);
+  ok('GP receipt order no', /GPA\./.test(gpRec.invoiceNo), gpRec.invoiceNo);
+  ok('GP receipt date', gpRec.invoiceDate === '2026-09-11', gpRec.invoiceDate);
+  ok('GP receipt tax 5.25', gpRec.tax === 5.25, gpRec.tax);
+
   const failed = results.filter(function (r) { return !r.pass; });
   results.forEach(function (r) {
     Logger.log((r.pass ? 'PASS  ' : 'FAIL  ') + r.name + (r.pass ? '' : '  -> ' + r.detail));

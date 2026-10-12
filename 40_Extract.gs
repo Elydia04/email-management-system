@@ -123,7 +123,9 @@ function scanJsonForInvoice_(node, out) {
 const ANCHORS = {
   invoiceNo: ['credit note number', 'credit note no', 'tax invoice number', 'invoice number',
     'invoice no.', 'invoice no', 'invoice #',
-    'invoice#', 'invoice id', 'invoice ref', 'document number', 'reference number',
+    'invoice#', 'invoice id', 'invoice ref', 'document number', 'order number',
+    'order no.', 'order no', 'order #', 'order#', 'order id', 'confirmation number',
+    'confirmation no', 'reference number',
     'reference no', 'reference #', 'reference', 'invoice'],
   invoiceDate: ['invoice date', 'date of issue', 'issue date', 'date issued', 'billing date',
     'bill date', 'date'],
@@ -213,7 +215,8 @@ function looksLikeInvoiceNo_(s) {
 
 const CURRENCY_SYMBOLS = {
   '$': 'USD', '\u20ac': 'EUR', '\u00a3': 'GBP', '\u00a5': 'JPY', '\u20b9': 'INR',
-  '\u20a9': 'KRW', '\u20aa': 'ILS', '\u20ba': 'TRY', '\u20bd': 'RUB'
+  '\u20a9': 'KRW', '\u20aa': 'ILS', '\u20ba': 'TRY', '\u20bd': 'RUB',
+  '\u20b1': 'PHP', '\u0e3f': 'THB', '\u20ab': 'VND', '\u20a6': 'NGN', '\u20b4': 'UAH'
 };
 
 const CURRENCY_CODES = /\b(USD|EUR|GBP|JPY|INR|AUD|CAD|CHF|NZD|SEK|NOK|DKK|ZAR|BRL|MXN|SGD|HKD|KRW|CNY|PLN|CZK|TRY|ILS|AED|SAR|THB|IDR|MYR|PHP|VND)\b/i;
@@ -223,7 +226,12 @@ function parseAmount_(raw) {
   const s = String(raw);
   if (!/\d/.test(s)) return null;
 
-  const negative = /^\s*[-(]/.test(s) || /\)\s*$/.test(s);
+  const trimmed = s.trim();
+  // A leading minus means negative. A bracketed value is negative only when the
+  // brackets hold essentially just the number, e.g. "(50.00)" or "($50.00)" —
+  // a bracketed clause like "(Includes VAT of 5.25)" must NOT flip the sign.
+  const negative = /^[-\u2013]/.test(trimmed) ||
+    /^\(\s*[^0-9]{0,6}\d[\d.,\u00a0 '\u2019]*\)$/.test(trimmed);
 
   let currency = '';
   const codeM = s.match(CURRENCY_CODES);

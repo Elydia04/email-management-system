@@ -68,28 +68,45 @@ function attachmentText_(att) {
   return { text: '', kind: kind, multiColumnRisk: false, error: 'unsupported type' };
 }
 
-function tempOcrFolder_() {
-  const id = cfg_(PROP.TEMP_OCR_FOLDER_ID, '');
-  if (id) { try { return DriveApp.getFolderById(id); } catch (e) { /* recreate */ } }
-  const f = DriveApp.createFolder('TempInvoiceOCR');
-  setProp_(PROP.TEMP_OCR_FOLDER_ID, f.getId());
-  return f;
+/**
+ * Id of the temp folder used for OCR conversions.
+ *
+ * Uses the advanced Drive API rather than DriveApp: DriveApp.createFolder
+ * requires the full `drive` scope, while Drive API files.insert accepts the
+ * narrower `drive.file` scope we declare. Recreates the folder if it vanished.
+ */
+function tempOcrFolderId_() {
+  const cached = cfg_(PROP.TEMP_OCR_FOLDER_ID, '');
+  if (cached) {
+    try { Drive.Files.get(cached); return cached; } catch (e) { /* gone; recreate */ }
+  }
+  const f = Drive.Files.insert({
+    title: 'TempInvoiceOCR',
+    mimeType: 'application/vnd.google-apps.folder'
+  });
+  setProp_(PROP.TEMP_OCR_FOLDER_ID, f.id);
+  return f.id;
 }
 
-/** Remove OCR temp docs older than an hour. */
+/** Best-effort removal of OCR temp docs older than TEMP_OCR_TTL_MS. */
 function cleanupTempOcr_() {
+  const folderId = cfg_(PROP.TEMP_OCR_FOLDER_ID, '');
+  if (!folderId) return;
   try {
-    const folder = tempOcrFolder_();
-    const it = folder.getFiles();
-    const cutoff = Date.now() - 60 * 60 * 1000;
-    while (it.hasNext()) {
-      const file = it.next();
-      if (file.getDateCreated().getTime() < cutoff) {
-        try { file.setTrashed(true); } catch (e) { /* ignore */ }
+    const res = Drive.Files.list({
+      q: "'" + folderId + "' in parents and trashed = false",
+      maxResults: 200
+    });
+    const items = res.items || [];
+    const cutoff = Date.now() - TEMP_OCR_TTL_MS;
+    for (let i = 0; i < items.length; i++) {
+      const created = Date.parse(items[i].createdDate || '');
+      if (!isNaN(created) && created < cutoff) {
+        try { Drive.Files.remove(items[i].id); } catch (e) { /* ignore */ }
       }
     }
   } catch (e) {
-    log_('WARN', 'temp cleanup failed: ' + (e && e.message ? e.message : e));
+    log_('WARN', 'temp OCR cleanup skipped: ' + (e && e.message ? e.message : e));
   }
 }
 
@@ -101,12 +118,12 @@ function cleanupTempOcr_() {
 function ocrBlobText_(att) {
   if (!att.bytes || !att.bytes.length) return { text: '', tables: [], error: 'empty' };
   if (att.bytes.length > MAX_OCR_BYTES) return { text: '', tables: [], error: 'too_large' };
-  const folder = tempOcrFolder_();
+  const folderId = tempOcrFolderId_();
   const blob = Utilities.newBlob(att.bytes, att.mimeType, att.name);
   let file;
   try {
     file = Drive.Files.insert(
-      { title: 'ocr_' + att.name, mimeType: 'application/vnd.google-apps.document', parents: [{ id: folder.getId() }] },
+      { title: 'ocr_' + att.name, mimeType: 'application/vnd.google-apps.document', parents: [{ id: folderId }] },
       blob,
       { convert: true, ocr: true, ocrLanguage: ocrLanguage_() }
     );
@@ -115,7 +132,7 @@ function ocrBlobText_(att) {
     return { text: '', tables: [], error: 'convert_failed: ' + m, encrypted: /password|encrypt/i.test(m) };
   }
 
-  let text = '', tables = [];
+  let text = '', tables = [], readErr = '';
   try {
     const doc = DocumentApp.openById(file.id);
     const body = doc.getBody();
@@ -135,7 +152,8 @@ function ocrBlobText_(att) {
     }
     doc.saveAndClose();
   } catch (e) {
-    // keep whatever partial text we got
+    // Keep any partial text, but surface the failure rather than hiding it.
+    readErr = 'doc_read_failed: ' + (e && e.message ? e.message : e);
   }
   try { Drive.Files.remove(file.id); } catch (e) { /* ignore */ }
 
@@ -143,7 +161,7 @@ function ocrBlobText_(att) {
   if (tables.length) {
     combined += '\n' + tables.map(function (t) { return t.label + ': ' + t.value; }).join('\n');
   }
-  return { text: combined, tables: tables, error: '' };
+  return { text: combined, tables: tables, error: readErr };
 }
 
 // ---- commit -----------------------------------------------------------------

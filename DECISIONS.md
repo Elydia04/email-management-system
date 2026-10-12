@@ -55,7 +55,13 @@ achievable inside Apps Script.
 **Guardrails that come with accepting it**
 - The script project is **not shared**; it stays tied to the one account.
 - Code is versioned in git so any change is reviewable.
-- All *other* scopes are held to the minimum: `spreadsheets`, `drive.file`, `script.scriptapp`.
+- All *other* scopes are held to the minimum: `spreadsheets`, `drive.file`, `documents`,
+  `script.scriptapp`.
+- OCR needs Drive write. Two traps found the hard way: the built-in `DriveApp.createFolder`
+  demands the full `drive` scope, and `DocumentApp` needs `documents`. So OCR creates and
+  cleans its temp folder through the **Drive API** (`files.insert` / `files.list`, which
+  accept `drive.file`) and reads the converted doc under the narrow `documents` scope —
+  avoiding full `drive` access.
 - The design is **non-destructive by construction**: it never deletes, moves, or modifies mail. The
   broad scope is required by the API, not by the design.
 - The consent screen will use alarming wording ("permanently delete all your email"). That is the

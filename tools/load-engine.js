@@ -37,7 +37,13 @@ function buildSource() {
     '  sleep: function () {},',
     '  formatDate: function (d) { return d.toISOString(); }',
     '};',
-    'var Session = { getScriptTimeZone: function () { return "America/Chicago"; } };'
+    'var Session = { getScriptTimeZone: function () { return "America/Chicago"; } };',
+    'var __props = {};',
+    'var PropertiesService = { getScriptProperties: function () { return {',
+    '  getProperty: function (k) { return Object.prototype.hasOwnProperty.call(__props, k) ? __props[k] : null; },',
+    '  setProperty: function (k, v) { __props[k] = String(v); },',
+    '  deleteProperty: function (k) { delete __props[k]; }',
+    '}; } };'
   ].join('\n');
 
   let src = shim + '\n';

@@ -83,7 +83,12 @@ function probeText(subject, from, text) {
   return reportExtraction_('probe-text', source).lines.join('\n');
 }
 
-/** Inspect a Drive-hosted PDF/image through the real OCR path (no writes). */
+/**
+ * Inspect a Drive-hosted PDF/image through the real OCR path (no writes).
+ * Dev helper: with the drive.file scope this can only read files the script
+ * itself created. Reading an arbitrary Drive file would need the full `drive`
+ * scope, which this project deliberately does not request.
+ */
 function probeDriveFile(fileId) {
   const file = DriveApp.getFileById(fileId);
   const att = { name: file.getName(), mimeType: file.getMimeType(), bytes: file.getBlob().getBytes() };

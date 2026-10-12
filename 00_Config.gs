@@ -73,6 +73,9 @@ const HEADERS = {
 /** Hard safety cap for a single attachment sent to OCR (bytes). */
 const MAX_OCR_BYTES = 15 * 1024 * 1024;
 
+/** OCR temp docs older than this are cleaned up on the next run. */
+const TEMP_OCR_TTL_MS = 60 * 60 * 1000;
+
 /** Content key is only built above this confidence (see SOLUTIONS.md solution A). */
 const CNT_KEY_MIN_CONFIDENCE = 0.8;
 
@@ -90,7 +93,12 @@ function cfg_(key, fallback) {
 
 function cfgInt_(key, fallback) {
   const v = cfg_(key, '');
-  const n = Number(v);
+  const s = String(v).trim();
+  // Number('') is 0, not NaN — so an unset property must be caught explicitly,
+  // or it silently becomes 0 (this once made MAX_EXECUTION_MS 0 and every run
+  // start with an already-expired clock).
+  if (s === '') return fallback;
+  const n = Number(s);
   return isNaN(n) ? fallback : n;
 }
 

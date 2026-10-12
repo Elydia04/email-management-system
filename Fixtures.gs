@@ -85,6 +85,29 @@ function fixtures_() {
       kind: 'body',
       text: 'Thanks for your purchase. A receipt is available in your account.',
       jsonLd: { invoiceNo: 'ORD-1', invoiceDate: '2026-05-03', amount: 42.5, currency: 'USD' }
+    },
+    {
+      // Sanitised real sample: Google Play (CapCut) subscription receipt, PHP.
+      // Exercises a non-$ currency symbol, a platform order number, VAT, and a
+      // timestamped date. Personal details replaced with placeholders.
+      name: 'google-play-receipt',
+      from: 'Google Play <googleplay-noreply@google.com>',
+      subject: 'Your Google Play Order Receipt',
+      kind: 'body',
+      text: [
+        'Thank you',
+        'Your trial of CapCut - Video Editor has ended. Your subscription continues at the price of \u20b149.00. Starting Oct 7, 2026 you will be automatically charged \u20b1480.00/month unless you cancel.',
+        '',
+        'Order number: GPA.1234-5678-9012-34567..0',
+        'Order date: Sep 11, 2026 3:34:52 AM GMT+8',
+        'Your account: someone@example.com',
+        'Item\tPrice',
+        'Monthly Subscription (CapCut: Photo & Video Editor)\t\u20b149.00',
+        'Total: \u20b149.00',
+        '(Includes VAT of \u20b15.25)',
+        'Payment method:',
+        'GCash: 63-9****00000'
+      ].join('\n')
     }
   ];
 }
