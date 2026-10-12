@@ -1,0 +1,10 @@
+# Apps Script / clasp
+.clasp.json
+.clasprc.json
+
+# Node
+node_modules/
+
+# Local scratch
+tools/.tmp/
+*.log
