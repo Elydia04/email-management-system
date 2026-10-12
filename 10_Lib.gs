@@ -106,7 +106,18 @@ function newRunClock_(budgetMs) {
   };
 }
 
-function isoNow_() { return new Date().toISOString(); }
+/**
+ * Current timestamp as ISO-8601 in the script's own time zone, including the
+ * UTC offset, e.g. 2026-10-12T14:33:00-0500 (Central Time, DST-aware).
+ * Falls back to UTC ISO if the script time zone is unavailable.
+ */
+function isoNow_() {
+  try {
+    const tz = Session.getScriptTimeZone();
+    if (tz) return Utilities.formatDate(new Date(), tz, "yyyy-MM-dd'T'HH:mm:ssZ");
+  } catch (e) { /* fall through */ }
+  return new Date().toISOString();
+}
 
 // ---- misc -------------------------------------------------------------------
 

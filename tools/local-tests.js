@@ -25,8 +25,10 @@ const shim = [
   '  DigestAlgorithm: { MD5: "MD5" },',
   '  newBlob: function (a) { return { getBytes: function () { return Array.from(Buffer.from(String(a), "utf8")); } }; },',
   '  computeDigest: function (alg, bytes) { return Array.from(crypto.createHash("md5").update(Buffer.from(bytes)).digest()); },',
-  '  sleep: function () {}',
-  '};'
+  '  sleep: function () {},',
+  '  formatDate: function (d, tz, pattern) { return d.toISOString(); }',
+  '};',
+  'var Session = { getScriptTimeZone: function () { return "America/Chicago"; } };'
 ].join('\n');
 
 let src = shim + '\n';

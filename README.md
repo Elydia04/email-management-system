@@ -65,7 +65,8 @@ Script project.
    - Replace the default files with the `.gs` files here (or use `clasp`).
    - Set the manifest: *Project Settings → Show "appsscript.json"*, then paste
      `appsscript.json`.
-   - **Change `timeZone`** from `Etc/UTC` to your real zone.
+   - **`timeZone` is set to `America/Chicago`** (Dallas / US Central, DST-aware).
+     Change it only if you relocate.
 
 2. **Enable advanced services**
    - *Editor → Services → +* → add **Gmail API** (v1) and **Drive API** (v2).
