@@ -106,6 +106,14 @@ function runTests() {
   ok('credit note still detected', detectDocType_('CREDIT NOTE') === 'credit_note', detectDocType_('CREDIT NOTE'));
   ok('cleanValue strips leading star', cleanValue_('* GPA.1') === 'GPA.1', cleanValue_('* GPA.1'));
 
+  // a receipt whose body mentions refund help must stay a receipt
+  ok('receipt title beats body refund',
+    detectDocType_('Your Google Play Order Receipt\nTotal: 49.00\nHow to request a refund') === 'receipt',
+    detectDocType_('Your Google Play Order Receipt\nTotal: 49.00\nHow to request a refund'));
+  ok('refund subject is a credit note',
+    detectDocType_('Refund processed\nWe have refunded your card') === 'credit_note',
+    detectDocType_('Refund processed\nWe have refunded your card'));
+
   // real-sample regression: Google Play (CapCut) receipt, non-USD
   const gp = fixtures_().filter(function (f) { return f.name === 'google-play-receipt'; })[0];
   const gpRouted = route_(gp.from, gp.text);

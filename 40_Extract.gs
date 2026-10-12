@@ -333,10 +333,20 @@ function normYear_(y) { return y < 100 ? 2000 + y : y; }
 
 function detectDocType_(text) {
   const t = String(text || '').toLowerCase();
-  // Require an explicit credit-note phrase. A bare "credit" (e.g. "credit
-  // card", or a forwarded footer) must NOT trigger this — that mistake once
-  // mistyped every Google Play receipt as a credit note.
-  if (/credit\s+(note|memo|invoice)|\brefund\b|\breversal\b|\bamount credited\b|\bcredit issued\b/.test(t)) {
+  // The caller prepends the subject, so line 1 is the strongest signal.
+  const title = (t.split('\n')[0] || '').trim();
+
+  // 1. An explicit title decides it: a subject naming a credit note / refund wins.
+  if (/credit\s+(note|memo|invoice)|\brefund\b/.test(title)) return 'credit_note';
+  if (/\breceipt\b/.test(title)) return 'receipt';
+  if (/\binvoice\b/.test(title)) return 'invoice';
+
+  // 2. Body heuristics. "refund"/"reversal" only count next to a strong verb —
+  //    a stray "refund" in a receipt's help text must NOT flip the doc type.
+  if (/credit\s+(note|memo|invoice)/.test(t) ||
+      /\bamount credited\b/.test(t) ||
+      /\brefund\b[\s\S]{0,30}\b(issued|processed|credited|approved|reversed)\b/.test(t) ||
+      /\b(issued|processed|credited|approved|reversed)\b[\s\S]{0,30}\brefund\b/.test(t)) {
     return 'credit_note';
   }
   if (/\breceipt\b|\border confirmation\b|\bpayment received\b|\bthank you for your (purchase|order)\b|\bpaid\b/.test(t)) {
