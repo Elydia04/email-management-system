@@ -17,7 +17,7 @@ const PLATFORM_DOMAINS = {
   'shopify.com': 1, 'intuit.com': 1, 'quickbooks.com': 1, 'bill.com': 1,
   'squareup.com': 1, 'braintreepayments.com': 1, 'chargebee.com': 1,
   'revolut.com': 1, 'wise.com': 1, 'xero.com': 1,
-  'google.com': 1
+  'google.com': 1, 'gcash.com': 1
 };
 
 const GENERIC_TEMPLATE = { name: 'generic', vendor: '', domains: [], anchors: null };
@@ -50,7 +50,8 @@ const VENDOR_TEMPLATES = {
 /** Merchant hints for platform escalation. Extend once samples identify merchants. */
 const MERCHANT_HINTS = [
   { vendor: 'Acme Corp', hints: ['acme'] },
-  { vendor: 'Google Play', hints: ['capcut', 'google play', 'play.google'] }
+  { vendor: 'Google Play', hints: ['capcut', 'google play', 'play.google'] },
+  { vendor: 'GCash', hints: ['gcash', 'globe gcash'] }
 ];
 
 // ---- sender parsing ---------------------------------------------------------
@@ -138,6 +139,16 @@ function extractRecord_(input) {
     if (j.dueDate && !f.dueDate) { const p = parseDate_(j.dueDate); if (p) f.dueDate = p.iso; }
     if ((f.amount === null || f.amount === undefined) && j.amount !== undefined && j.amount !== null) f.amount = j.amount;
     if (!f.currency && j.currency) f.currency = j.currency;
+  }
+
+  // Infer currency when amount exists but currency is missing (common in local banks).
+  if ((f.amount !== null && f.amount !== undefined) && !f.currency) {
+    const t = ((input.text || '') + '\n' + (input.subject || '')).toLowerCase();
+    const v = String(f.vendor || input.vendor || '').toLowerCase();
+    if (v.indexOf('gcash') !== -1 || t.indexOf('php') !== -1 || t.indexOf('peso') !== -1 || t.indexOf('p') === -1 && false) {
+      // cheap: if gcash or mentions php/peso, assume PHP
+    }
+    if (v.indexOf('gcash') !== -1 || t.indexOf('php') !== -1 || t.indexOf('peso') !== -1) f.currency = 'PHP';
   }
 
   f.vendor = input.vendor || '';
