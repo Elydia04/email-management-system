@@ -9,5 +9,10 @@ node_modules/
 tools/.tmp/
 *.log
 
-# Generated single-file bundle (rebuild with: node tools/build-bundle.js)
-dist/
+# Internal dev/design docs (not needed by end users)
+DECISIONS.md
+RESEARCH.md
+SOLUTIONS.md
+RISKS.md
+REFERENCES.md
+VENDOR-TEMPLATES.md
