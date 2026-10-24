@@ -41,7 +41,9 @@ In the Apps Script editor:
 
 1. Click **Project Settings** (gear icon) → **Script Properties**
 2. Add a property: `DRY_RUN` = `false`
-3. Back in the editor, run `installTrigger` — this sets up the hourly auto-run
+3. Back in the editor, run `installTrigger` — this sets up an automatic run every **10 minutes** (so you never have to press Run again)
+
+> Want a different schedule? You can also run `installTriggerEvery5Min()`, `installTriggerEvery15Min()`, or `installTriggerHourly()` instead. You only need to run one of them.
 
 ### Step 6 — Create a Gmail filter
 
@@ -50,8 +52,7 @@ In the Apps Script editor:
 3. Click **Create filter** → check **Apply the label** → select `InvoiceTracker`
 4. Click **Create filter**
 
-That's it. New invoices are picked up automatically every hour and written to
-your spreadsheet — no further action needed.
+**That's it.** Once labeled, invoices are picked up automatically on the schedule you chose and written to your spreadsheet. No manual runs needed going forward.
 
 ---
 
@@ -108,7 +109,11 @@ Run these from the Apps Script editor when needed:
 | Function | What it does |
 | --- | --- |
 | `setup()` | Creates spreadsheet + label. Safe to re-run. |
-| `installTrigger()` | Sets up the hourly auto-run. Run once. |
+| `installTrigger()` | Sets up auto-run every 10 minutes (default). Run once. |
+| `installTriggerEvery5Min()` | Auto-run every 5 minutes. |
+| `installTriggerEvery15Min()` | Auto-run every 15 minutes. |
+| `installTriggerHourly()` | Auto-run every hour. |
+| `uninstallRunTriggers()` | Remove all auto-run triggers. |
 | `run()` | Manual run (same as the hourly trigger). |
 | `resetSync()` | Clears the Gmail history cursor. Use if sync gets stuck. |
 | `wipeLedger()` | Clears all data rows (keeps headers). Use to start fresh. |

@@ -397,13 +397,42 @@ function setup() {
   return info;
 }
 
-/** Install an hourly time-driven trigger (idempotent). Run manually once. */
-function installTrigger() {
+/** Remove any existing 'run' time-driven triggers. */
+function uninstallRunTriggers() {
   ScriptApp.getProjectTriggers().forEach(function (t) {
     if (t.getHandlerFunction() === 'run') ScriptApp.deleteTrigger(t);
   });
+}
+
+/** Install a time-driven trigger to run the processor automatically (idempotent). 
+ *  Defaults to every 10 minutes for timely processing. 
+ *  Run manually once from the Apps Script editor.
+ */
+function installTrigger() {
+  uninstallRunTriggers();
+  ScriptApp.newTrigger('run').timeBased().everyMinutes(10).create();
+  Logger.log('Trigger installed: run() every 10 minutes');
+}
+
+/** Install trigger to run every 5 minutes (idempotent). */
+function installTriggerEvery5Min() {
+  uninstallRunTriggers();
+  ScriptApp.newTrigger('run').timeBased().everyMinutes(5).create();
+  Logger.log('Trigger installed: run() every 5 minutes');
+}
+
+/** Install trigger to run every 15 minutes (idempotent). */
+function installTriggerEvery15Min() {
+  uninstallRunTriggers();
+  ScriptApp.newTrigger('run').timeBased().everyMinutes(15).create();
+  Logger.log('Trigger installed: run() every 15 minutes');
+}
+
+/** Install trigger to run hourly (idempotent). */
+function installTriggerHourly() {
+  uninstallRunTriggers();
   ScriptApp.newTrigger('run').timeBased().everyHours(1).create();
-  Logger.log('hourly trigger installed');
+  Logger.log('Trigger installed: run() every hour');
 }
 
 /** Clear a stuck bootstrap so the next run re-seeds from scratch. */
